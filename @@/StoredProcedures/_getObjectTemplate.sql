@@ -17,11 +17,12 @@ DECLARE @CRLF char(2)=[@@].[CRLF]()
 DECLARE @Begin int=0
 DECLARE @End int=0
 DECLARE @Template_BeforeEnd NVARCHAR (MAX)=''
-
+DECLARE @LoopCounter int=10000  -- Schutz gegen Endlosschleifen
 SET @Template=''
 
-WHILE @i <= @l
+WHILE @i <= @l AND @LoopCounter > 0
 BEGIN
+  SET @LoopCounter=@LoopCounter-1
   SET @p=CHARINDEX(@CRLF,@Text,@i)
   SET @z=SUBSTRING(@Text,@i,@p-@i)
   SET @i=@p+2
