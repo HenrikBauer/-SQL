@@ -20,4 +20,7 @@
       <DatabaseVariableLiteralValue>master</DatabaseVariableLiteralValue>
     </ArtifactReference>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="@SQL.publish.xml" />
+  </ItemGroup>
 </Project>
