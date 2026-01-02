@@ -1,6 +1,6 @@
-CREATE OR ALTER PROCEDURE [@@].[_getObjectTemplate]
+CREATE   PROCEDURE [@@].[_getObjectTemplate]
 @Object NVARCHAR (MAX)
-,@Template NVARCHAR (MAX) OUTPUT
+,@Template NVARCHAR (MAX)='' OUTPUT
 ,@OnlyBeginEndBlock bit =1
 ,@TrimLines bit =1
 ,@RemoveEmptyLines bit =1
@@ -17,26 +17,32 @@ DECLARE @z varchar(max)
 DECLARE @Begin int=0
 DECLARE @End int=0
 DECLARE @Template_BeforeEnd NVARCHAR (MAX)=''
-DECLARE @LoopCounter int=10000  -- Schutz gegen Endlosschleifen
-SET @Template=''
 
 DECLARE @EOL varchar(2)=[@@].[CRLF]()
 -- Prüfen, ob CRLF, LF oder CR als Zeilenumbruch verwendet wird
 SET @p=CHARINDEX(@EOL,@Text,@i)
 if @p=0 
 begin
-  set @EOL=right(@EOL,1)  -- nur LF
+  set @EOL=char(10)  -- nur LF
   SET @p=CHARINDEX(@EOL,@Text,@i)
 END
-if @p=0 set @EOL=LEFT([@@].[CRLF](),1) -- nur CR
+if @p=0 set @EOL=char(13) -- nur CR
 
 DECLARE @EOL_LEN int=LEN(@EOL)
-
+DECLARE @LoopCounter int=Len(@Text)-LEN(REPLACE(@Text,@EOL,''))+1  -- Schutz gegen Endlosschleifen, -- Anzahl der Zeilenumbrüche
 WHILE @i <= @l AND @LoopCounter > 0
 BEGIN
   SET @LoopCounter=@LoopCounter-1
   SET @p=CHARINDEX(@EOL,@Text,@i)
-  SET @z=SUBSTRING(@Text,@i,@p-@i)
+  IF @p=0
+  BEGIN
+    SET @p=@l+1
+    SET @z=SUBSTRING(@Text,@i,@l)
+  END
+  ELSE
+  BEGIN
+    SET @z=SUBSTRING(@Text,@i,@p-@i)
+  END
   SET @i=@p+@EOL_LEN
 
 	-- Tabs und CR LF entfernen
@@ -60,6 +66,7 @@ BEGIN
 		IF LEN(@z)=0 OR @z IS NULL
       CONTINUE
 	END
+
   IF @OnlyBeginEndBlock=1
 	BEGIN
     IF @z='END' and @Begin>0
@@ -76,6 +83,7 @@ BEGIN
       SET @Begin=1
     END
 	END
+  
   IF @OnlyBeginEndBlock=0
 	BEGIN
     SET @Template=@Template+@z+@EOL
